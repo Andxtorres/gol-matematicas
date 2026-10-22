@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gol de Matemáticas</title>
+<style>
+  :root {
+    --grass: #1f8a3b; --grass2: #26a047; --line: #ffffffcc;
+    --card: #ffffff; --ink: #1b2a1f; --accent: #ffcc00; --bad: #e53935; --good: #2ecc71; --blue: #1565c0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: "Segoe UI", system-ui, -apple-system, sans-serif; color: var(--ink);
+    min-height: 100vh; background: repeating-linear-gradient(90deg, var(--grass) 0 60px, var(--grass2) 60px 120px);
+    display: flex; flex-direction: column; align-items: center; padding: 16px;
+  }
+  h1 { color: #fff; text-shadow: 0 3px 0 #0006; margin: 8px 0 4px; font-size: 2rem; text-align: center; }
+  .sub { color: #ffe; margin: 0 0 12px; text-align: center; font-weight: 700; }
+  .card { background: var(--card); border-radius: 20px; padding: 20px; width: 100%; max-width: 560px; box-shadow: 0 10px 30px #0005; text-align: center; }
+  .scoreboard { display: flex; justify-content: space-around; align-items: center; background: #111; color: #fff; border-radius: 14px; padding: 10px; margin-bottom: 14px; font-weight: 700; font-size: 1.1rem; }
+  .scoreboard .num { font-size: 2.2rem; color: var(--accent); display: block; }
+  .pitch { position: relative; height: 110px; margin: 10px 0; overflow: hidden; border-radius: 12px; background: linear-gradient(#2fb24f, #238a3c); border: 3px solid var(--line); }
+  .goal { position: absolute; right: 8px; top: 15px; width: 70px; height: 80px; border: 4px solid #fff; border-right: none;
+    background: repeating-linear-gradient(45deg, #fff5 0 2px, transparent 2px 10px), repeating-linear-gradient(-45deg, #fff5 0 2px, transparent 2px 10px); }
+  .ball { position: absolute; left: 20px; top: 50px; font-size: 32px; }
+  .ball.shoot { animation: shoot .7s ease-in forwards; }
+  @keyframes shoot { 100% { left: 460px; top: 40px; transform: rotate(720deg); } }
+  .ball.miss { animation: miss .7s ease-in forwards; }
+  @keyframes miss { 100% { left: 470px; top: -60px; transform: rotate(540deg); } }
+  .question { font-size: 1.4rem; font-weight: 700; margin: 14px 0 6px; }
+  .bignum { font-size: 3.5rem; color: var(--blue); display: block; letter-spacing: 4px; }
+  .visual { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-items: center; margin: 10px 0; }
+  .bag { background: #fff3cd; border: 2px dashed #e0a800; border-radius: 10px; padding: 6px; width: 120px; font-size: 18px; line-height: 1.2; }
+  .bag small { display: block; color: #a07000; font-weight: 700; }
+  .box { width: 70px; font-size: 34px; background: #ffe0b2; border-color: #e65100; }
+  .box small { color: #e65100; }
+  .loose { font-size: 26px; display: flex; gap: 2px; flex-wrap: wrap; justify-content: center; }
+  .seq span { display: inline-block; font-size: 1.8rem; font-weight: 700; background: #e3f2fd; color: var(--blue); border-radius: 10px; padding: 8px 12px; margin: 4px; }
+  .seq .blank { background: #fff3cd; color: #a07000; border: 2px dashed #e0a800; }
+  .eq { font-size: 1.9rem; font-weight: 700; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; }
+  .slot { display: inline-block; min-width: 60px; padding: 4px 10px; background: #fff3cd; border: 3px dashed #e0a800; border-radius: 10px; color: #a07000; }
+  .slot.filled { background: #e3f2fd; border-style: solid; border-color: var(--blue); color: var(--blue); }
+  .options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+  .options.three { grid-template-columns: 1fr 1fr 1fr; }
+  .options.text button { font-size: 1.15rem; }
+  button { font-size: 1.5rem; font-weight: 700; padding: 18px; border-radius: 14px; border: none; cursor: pointer; background: var(--blue); color: #fff; box-shadow: 0 5px 0 #0d3f78; transition: transform .1s; }
+  button:active { transform: translateY(4px); box-shadow: none; }
+  button.ok { background: var(--good); box-shadow: 0 5px 0 #1b8f4d; }
+  button.bad { background: var(--bad); box-shadow: 0 5px 0 #8e1b18; }
+  button.sel { background: #7e57c2; box-shadow: 0 5px 0 #4d2c91; }
+  button:disabled { opacity: .85; cursor: default; }
+  button svg { display: block; margin: 4px auto 0; }
+  .big { width: 100%; background: var(--accent); color: var(--ink); box-shadow: 0 5px 0 #b38f00; font-size: 1.6rem; }
+  .diffs { display: flex; gap: 6px; margin: 8px 0 14px; }
+  .diffs button { flex: 1; font-size: .95rem; padding: 10px 4px; background: #eee; color: #555; box-shadow: 0 4px 0 #bbb; line-height: 1.2; }
+  .diffs button.on { background: var(--accent); color: var(--ink); box-shadow: 0 4px 0 #b38f00; }
+  .levels { display: grid; gap: 10px; }
+  .levels button { text-align: left; font-size: 1.2rem; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; }
+  .levels small { font-weight: 400; opacity: .9; }
+  .feedback { font-size: 1.25rem; font-weight: 700; min-height: 2.5em; margin-top: 12px; }
+  .feedback.good { color: #1b8f4d; } .feedback.bad { color: var(--bad); }
+  .stars { font-size: 3rem; margin: 10px 0; }
+  .hidden { display: none; }
+  .progress { height: 10px; background: #ddd; border-radius: 5px; overflow: hidden; margin-bottom: 10px; }
+  .progress div { height: 100%; background: var(--accent); width: 0; transition: width .3s; }
+  .row { display: flex; gap: 10px; } .row button { flex: 1; }
+  @media (max-width: 480px) {
+    .question { font-size: 1.2rem; } button { font-size: 1.3rem; padding: 14px; } .options.three button { font-size: 1.05rem; padding: 12px 6px; }
+    .diffs button { font-size: .8rem; padding: 8px 2px; } .seq span { font-size: 1.4rem; padding: 6px 8px; } .eq { font-size: 1.5rem; }
+    @keyframes shoot { 100% { left: 300px; top: 40px; transform: rotate(720deg); } } @keyframes miss { 100% { left: 300px; top: -60px; } }
+  }
+</style>
+</head>
+<body>
+<h1>⚽ Gol de Matemáticas ⚽</h1>
+<p class="sub" id="levelName">Elige tu nivel</p>
+
+<div class="card" id="start">
+  <h2 style="margin:0 0 6px">¡Hola, Andy! 👋</h2>
+  <p style="font-size:1.05rem;margin:0 0 10px">Cada respuesta correcta es un <b>GOL</b>. Si fallas, anota el rival. 10 jugadas por partido.</p>
+  <div style="font-weight:700;color:#555">Dificultad</div>
+  <div class="diffs" id="diffs"></div>
+  <div class="levels" id="levels"></div>
+</div>
+
+<div class="card hidden" id="game">
+  <div class="scoreboard">
+    <div>ANDY<span class="num" id="sAndy">0</span></div>
+    <div style="font-size:.9rem">Jugada<br><span id="turn">1</span>/10</div>
+    <div>RIVAL<span class="num" id="sRival">0</span></div>
+  </div>
+  <div class="progress"><div id="bar"></div></div>
+  <div class="pitch"><div class="goal"></div><div class="ball" id="ball">⚽</div></div>
+  <div class="question" id="q"></div>
+  <div class="visual" id="visual"></div>
+  <div class="options" id="opts"></div>
+  <div class="feedback" id="fb"></div>
+  <button class="big hidden" id="next" onclick="nextQ()">Siguiente ➡️</button>
+</div>
+
+<div class="card hidden" id="end">
+  <h2 id="endTitle"></h2>
+  <div class="stars" id="stars"></div>
+  <p id="endText" style="font-size:1.3rem"></p>
+  <div class="row"><button class="big" onclick="startGame(level)">🔁 Otra vez</button><button class="big" onclick="showStart()">📋 Niveles</button></div>
+</div>
+
+<script>
+const TOTAL = 10;
+const DIFFS = [['Fácil', '⭐'], ['Medio', '⭐⭐'], ['Difícil', '⭐⭐⭐'], ['Experto', '🔥'], ['Leyenda', '👑']];
+let andy, rival, turn, current, level, diff = 0;
+const $ = id => document.getElementById(id);
+const rnd = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
+const shuffle = a => a.sort(() => Math.random() - .5);
+const pick = a => a[rnd(0, a.length - 1)];
+const pl = (n, w) => `${n} ${w}${n === 1 ? '' : (w.endsWith('d') ? 'es' : 's')}`;
+const load = (k, f) => { try { return localStorage.getItem(k) ?? f; } catch { return f; } };
+const save = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
+diff = Math.min(4, Math.max(0, +load('diff', 0) || 0));
+
+// Opciones: correcta + distractores, sin repetir, dentro de [min,max]
+function options(correct, min, max, extra = []) {
+  const set = new Set([correct]);
+  for (const e of extra) if (e >= min && e <= max && set.size < 4) set.add(e);
+  let guard = 0;
+  while (set.size < 4 && guard++ < 100) { const v = correct + rnd(-3, 3); if (v >= min && v <= max) set.add(v); }
+  while (set.size < 4) set.add(rnd(min, max)); // ponytail: rango muy chico, relleno al azar
+  return shuffle([...set]);
+}
+const choice = vals => vals.map(v => ({ v, html: String(v) }));
+
+// ---------- Nivel 1: valor posicional ----------
+const PLACES = [['unidad', 'unidades', 'U'], ['decena', 'decenas', 'D'], ['centena', 'centenas', 'C'], ['unidad de millar', 'unidades de millar', 'UM']];
+const pn = (n, i) => `${n} ${PLACES[i][n === 1 ? 0 : 1]}`;
+const digs = n => String(n).split('').reverse().map(Number); // [u, d, c, um]
+const toNum = ds => ds.reduce((s, v, i) => s + v * 10 ** i, 0);
+function genDU() {
+  const nd = [2, 3, 4, 4, 4][diff], lo = 10 ** (nd - 1), hi = 10 ** nd - 1;
+  const t = pick([[0, 1, 2], [0, 1, 2], [0, 1, 3], [0, 4, 3, 5], [4, 3, 5, 6]][diff]);
+  let n = rnd(lo + 1, hi);
+  if (t === 4) { const ds = digs(n); ds[rnd(1, nd - 2)] = 0; n = toNum(ds); }
+  const ds = digs(n), big = `<span class="bignum">${n}</span>`;
+  const comp = ds.map((v, i) => [v, i]).filter(([v]) => v > 0).reverse().map(([v, i]) => pn(v, i));
+  const compText = comp.length > 1 ? comp.slice(0, -1).join(', ') + ' y ' + comp.at(-1) : comp[0];
+  const why = `${n} = ${compText}.`;
+  const perms = [];
+  for (let i = 0; i < nd; i++) for (let j = i + 1; j < nd; j++) { const d2 = [...ds]; [d2[i], d2[j]] = [d2[j], d2[i]]; const v = toNum(d2); if (v >= lo && v !== n) perms.push(v); }
+  switch (t) {
+    case 0: { const i = rnd(0, nd - 1); return { text: `¿Cuántas <u>${PLACES[i][1].toUpperCase()}</u> tiene el número?`, visual: big, mode: 'choice', answer: ds[i], opts: choice(options(ds[i], 0, 9, ds.filter((_, j) => j !== i))), why }; }
+    case 1: return { text: `${compText}, ¿qué número es?`, mode: 'choice', answer: n, opts: choice(options(n, lo, hi, shuffle([...perms, n + 10, n - 10, n + 100, n - 100]))), why };
+    case 4: { const cat = Number(ds.filter(v => v > 0).reverse().join('')); return { text: `${compText}, ¿qué número es?`, mode: 'choice', answer: n, opts: choice(options(n, 1, hi, [cat, cat * 10, ...shuffle(perms)])), why: why + ' ¡Ojo con el cero!' }; }
+    case 2: {
+      let v = '';
+      for (let i = 0; i < (ds[2] || 0); i++) v += `<div class="bag box">📦<small>100</small></div>`;
+      for (let i = 0; i < ds[1]; i++) v += `<div class="bag">${'⚽'.repeat(10)}<small>10</small></div>`;
+      v += `<div class="loose">${'⚽'.repeat(ds[0])}</div>`;
+      return { text: 'Cuenta los balones. ¿Qué número es?', visual: v, mode: 'choice', answer: n, opts: choice(options(n, lo, hi, shuffle([...perms, n + 10, n - 10, n + 1, n - 1]))), why: `${nd === 3 ? pl(ds[2], 'caja') + ' de 100, ' : ''}${pl(ds[1], 'bolsa')} de 10 y ${ds[0]} suelto${ds[0] === 1 ? '' : 's'} = ${n}.` };
+    }
+    case 3: {
+      const i = pick(ds.map((v, k) => v > 0 ? k : -1).filter(k => k >= 0)), val = ds[i] * 10 ** i;
+      const shown = String(n).split('').map((ch, j) => j === nd - 1 - i ? `<span style="color:#e53935">${ch}</span>` : ch).join('');
+      return { text: `¿Cuánto vale el <span style="color:#e53935">${ds[i]}</span> en este número?`, visual: `<span class="bignum">${shown}</span>`, mode: 'choice', answer: val, opts: choice(shuffle([ds[i], ds[i] * 10, ds[i] * 100, ds[i] * 1000])), why: `El ${ds[i]} está en las ${PLACES[i][1]}: vale ${val}.` };
+    }
+    case 5: {
+      const terms = ds.map((v, i) => v * 10 ** i).filter(v => v > 0).reverse(), correct = terms.join(' + ');
+      const set = new Set([correct]);
+      let guard = 0;
+      while (set.size < 4 && guard++ < 50) {
+        const k = rnd(0, terms.length - 1), t2 = [...terms], f = pick([10, .1, 10, 100]);
+        t2[k] = Math.round(t2[k] * f); if (t2[k] >= 1 && t2[k] <= 9000) set.add(t2.join(' + '));
+      }
+      if (set.size < 4) set.add(ds.filter(v => v > 0).reverse().join(' + '));
+      return { text: '¿Cómo se descompone este número?', visual: big, mode: 'choice', answer: correct, opts: choice(shuffle([...set])), textOpts: true, why: `${n} = ${correct}.` };
+    }
+    default: {
+      const set = new Set([n, ...perms]); let guard = 0;
+      while (set.size < 4 && guard++ < 50) { const v = n + pick([-1, 1]) * rnd(1, 30); if (v >= lo && v <= hi) set.add(v); }
+      const nums = shuffle([...set]).slice(0, 4), asc = Math.random() < .5, sorted = [...nums].sort((a, b) => asc ? a - b : b - a);
+      return { text: `Tócalos de <u>${asc ? 'MENOR a MAYOR' : 'MAYOR a MENOR'}</u>.`, mode: 'order', answer: sorted, opts: choice(nums), why: `${sorted.join(asc ? ' < ' : ' > ')}.` };
+    }
+  }
+}
+
+// ---------- Nivel 2: simetría ----------
+const poly = (n, r, rot = -90) => Array.from({ length: n }, (_, i) => { const a = (rot + i * 360 / n) * Math.PI / 180; return `${(50 + r * Math.cos(a)).toFixed(1)},${(50 + r * Math.sin(a)).toFixed(1)}`; }).join(' ');
+const star = (n, r1, r2) => Array.from({ length: 2 * n }, (_, i) => { const r = i % 2 ? r2 : r1, a = (-90 + i * 180 / n) * Math.PI / 180; return `${(50 + r * Math.cos(a)).toFixed(1)},${(50 + r * Math.sin(a)).toFixed(1)}`; }).join(' ');
+const P = pts => `<polygon points="${pts}"/>`;
+const SHAPES = [
+  { n: 'El cuadrado', svg: '<rect x="15" y="15" width="70" height="70"/>', ax: [0, 45, 90, 135] },
+  { n: 'El rectángulo', svg: '<rect x="10" y="28" width="80" height="44"/>', ax: [0, 90] },
+  { n: 'El círculo', svg: '<circle cx="50" cy="50" r="38"/>', ax: [0, 45, 90, 135], inf: true },
+  { n: 'El óvalo', svg: '<ellipse cx="50" cy="50" rx="42" ry="26"/>', ax: [0, 90] },
+  { n: 'El triángulo equilátero', svg: P(poly(3, 40)), ax: [90, 30, 150] },
+  { n: 'El triángulo isósceles', svg: P('50,10 85,88 15,88'), ax: [90] },
+  { n: 'El triángulo escaleno', svg: P('20,85 90,80 35,15'), ax: [] },
+  { n: 'El rombo', svg: P('50,8 80,50 50,92 20,50'), ax: [0, 90] },
+  { n: 'El paralelogramo', svg: P('30,25 95,25 70,75 5,75'), ax: [] },
+  { n: 'El trapecio', svg: P('30,25 70,25 90,75 10,75'), ax: [90] },
+  { n: 'La cometa', svg: P('50,8 78,40 50,92 22,40'), ax: [90] },
+  { n: 'El cuadrilátero irregular', svg: P('15,30 80,12 90,70 35,90'), ax: [] },
+  { n: 'El pentágono', svg: P(poly(5, 40)), ax: [90, 54, 18, 162, 126] },
+  { n: 'El hexágono', svg: P(poly(6, 40, 0)), ax: [0, 30, 60, 90, 120, 150] },
+  { n: 'La estrella', svg: P(star(5, 42, 18)), ax: [90, 54, 18, 162, 126] },
+  { n: 'El corazón', svg: '<path d="M50,88 C20,65 5,45 15,28 C25,12 45,18 50,32 C55,18 75,12 85,28 C95,45 80,65 50,88 Z"/>', ax: [90] },
+  { n: 'La cruz', svg: P('38,10 62,10 62,38 90,38 90,62 62,62 62,90 38,90 38,62 10,62 10,38 38,38'), ax: [0, 45, 90, 135] },
+  { n: 'La flecha', svg: P('10,38 55,38 55,18 92,50 55,82 55,62 10,62'), ax: [0] },
+  { n: 'La letra L', svg: P('25,12 42,12 42,72 80,72 80,88 25,88'), ax: [] },
+  { n: 'La letra T', svg: P('15,12 85,12 85,27 58,27 58,88 42,88 42,27 15,27'), ax: [90] },
+  { n: 'La letra H', svg: P('18,12 32,12 32,43 68,43 68,12 82,12 82,88 68,88 68,57 32,57 32,88 18,88'), ax: [0, 90] },
+  { n: 'La letra Z', svg: P('18,12 82,12 82,26 40,74 82,74 82,88 18,88 18,74 60,26 18,26'), ax: [] },
+  { n: 'La letra F', svg: P('25,12 80,12 80,26 41,26 41,43 70,43 70,57 41,57 41,88 25,88'), ax: [] },
+];
+const axLine = (deg, col = '#e53935', dash = '5 3') => { const t = deg * Math.PI / 180, c = 55 * Math.cos(t), s = 55 * Math.sin(t); return `<line x1="${50 + c}" y1="${50 - s}" x2="${50 - c}" y2="${50 + s}" stroke="${col}" stroke-width="2.5" stroke-dasharray="${dash}"/>`; };
+const svgShape = (s, axes = [], rot = 0, asked = null) => `<svg viewBox="0 0 100 100" width="170" height="170"><g transform="rotate(${rot} 50 50)"><g fill="#42a5f5" stroke="#0d47a1" stroke-width="2">${s.svg}</g>${axes.map(a => axLine(a)).join('')}${asked === null ? '' : axLine(asked, '#7e57c2', '0')}</g></svg>`;
+const angDist = (a, b) => { const d = ((a - b) % 180 + 180) % 180; return Math.min(d, 180 - d); };
+const axesWhy = s => s.inf ? 'El círculo tiene infinitos ejes de simetría.' : s.ax.length === 0 ? `${s.n} NO tiene ejes de simetría.` : `${s.n} tiene ${pl(s.ax.length, 'eje')} de simetría.`;
+function genSim() {
+  const s = pick(SHAPES), n = s.ax.length, rot = diff >= 3 ? rnd(0, 359) : 0;
+  if (diff === 2 || (diff === 4 && Math.random() < .5)) {
+    let isAxis = s.inf || (n > 0 && Math.random() < .5), deg;
+    if (isAxis) deg = pick(s.ax);
+    else {
+      deg = diff === 4 && n > 0 ? (pick(s.ax) + pick([-1, 1]) * rnd(15, 30) + 180) % 180 : rnd(0, 179);
+      let guard = 0; while (s.ax.some(a => angDist(deg, a) < 12) && guard++ < 50) deg = rnd(0, 179);
+    }
+    return { text: '¿La línea morada es un <u>eje de simetría</u>?', visual: svgShape(s, [], rot, deg), mode: 'choice', answer: isAxis ? 'Sí' : 'No', opts: choice(['Sí', 'No']), why: (isAxis ? 'Sí: al doblar por la línea, las dos mitades coinciden. ' : 'No: las dos mitades no coinciden. ') + axesWhy(s), after: svgShape(s, s.ax, rot, deg) };
+  }
+  let answer, opts;
+  if (diff === 0) { answer = n === 0 ? 'Ninguno' : n === 1 ? 'Uno' : 'Dos o más'; opts = ['Ninguno', 'Uno', 'Dos o más']; }
+  else if (diff === 1) { answer = n >= 3 ? '3 o más' : String(n); opts = ['0', '1', '2', '3 o más']; }
+  else {
+    const pool = ['0', '1', '2', '3', '4', '5', '6', 'Infinitos']; answer = s.inf ? 'Infinitos' : String(n);
+    const ci = pool.indexOf(answer);
+    opts = shuffle([answer, ...pool.filter(p => p !== answer).sort((a, b) => Math.abs(pool.indexOf(a) - ci) - Math.abs(pool.indexOf(b) - ci) + Math.random() - .5).slice(0, 3)]);
+  }
+  return { text: '¿Cuántos ejes de simetría tiene esta figura?', visual: svgShape(s, [], rot), mode: 'choice', answer, opts: choice(opts), three: opts.length === 3, why: axesWhy(s), after: svgShape(s, s.ax, rot) };
+}
+
+// ---------- Nivel 3: ábaco ----------
+const BEAD = ['#ffcc00', '#e53935', '#43a047', '#1e88e5'];
+function abaco(n, cols, w) {
+  const ds = digs(n); while (ds.length < cols) ds.push(0);
+  const cw = 26, W = cols * cw + 8, x = i => W - 4 - cw / 2 - i * cw;
+  let out = `<svg viewBox="0 0 ${W} 122" width="${w}"><rect x="2" y="110" width="${W - 4}" height="9" rx="2" fill="#6d4c41"/>`;
+  for (let i = 0; i < cols; i++) {
+    out += `<text x="${x(i)}" y="9" font-size="9" font-weight="700" text-anchor="middle" fill="currentColor">${PLACES[i][2]}</text><line x1="${x(i)}" y1="12" x2="${x(i)}" y2="110" stroke="#8d6e63" stroke-width="3"/>`;
+    for (let k = 0; k < ds[i]; k++) out += `<circle cx="${x(i)}" cy="${104 - k * 11}" r="5" fill="${BEAD[i]}" stroke="#0004"/>`;
+  }
+  return out + '</svg>';
+}
+function genAbaco() {
+  const cols = [2, 3, 3, 4, 4][diff], N = [[3, 9], [2, 5], [4, 9], [3, 7], [4, 9]][diff], k = [4, 4, 5, 5, 6][diff], beads = rnd(N[0], N[1]);
+  const all = [];
+  (function go(i, rem, acc) { if (i === cols) { if (rem === 0) all.push(acc); return; } for (let d = 0; d <= Math.min(9, rem); d++) go(i + 1, rem - d, acc + d * 10 ** i); })(0, beads, 0);
+  const nums = shuffle(all).slice(0, k), asc = diff < 2 || Math.random() < .5;
+  const sorted = [...nums].sort((a, b) => asc ? a - b : b - a);
+  return {
+    text: `Con <b>${beads} bolitas</b> en el ábaco (${PLACES.slice(0, cols).map(p => p[2]).reverse().join(', ')}) se forman estos números.<br>Tócalos de <u>${asc ? 'MENOR a MAYOR' : 'MAYOR a MENOR'}</u>.`,
+    visual: `<div style="font-size:1.8rem">${'🟤'.repeat(beads)}</div>`, mode: 'order', answer: sorted,
+    opts: nums.map(v => ({ v, html: `${v}${abaco(v, cols, 30 + 22 * cols)}` })), why: `De ${asc ? 'menor a mayor' : 'mayor a menor'}: ${sorted.join(asc ? ' < ' : ' > ')}.`,
+  };
+}
+
+// ---------- Nivel 4: conteo ----------
+function genConteo() {
+  const Pm = [{ steps: [1, 10], max: 100, shown: 3 }, { steps: [1, 2, 5, 10], max: 200, shown: 3 }, { steps: [2, 3, 5, 10, 25, 100], max: 1000, shown: 3 },
+    { steps: [3, 4, 6, 7, 8, 9, 25, 50, 100], max: 1000, shown: 4 }, { steps: [6, 7, 8, 9, 11, 12, 15, 20, 25, 50, 100, 250], max: 5000, shown: 4 }][diff];
+  const step = pick(Pm.steps), total = Pm.shown + 1, up = diff >= 3 && Math.random() < .3;
+  const start = up ? rnd(0, Pm.max - step * (total - 1)) : rnd(step * (total - 1), Pm.max);
+  const seq = Array.from({ length: total }, (_, i) => up ? start + i * step : start - i * step);
+  const blank = diff === 0 ? total - 1 : rnd(1, total - 1), ans = seq[blank];
+  const extra = shuffle([ans + step, ans - step, ans + 1, ans - 1, ans + 10, ans - 10, ans + 2 * step, ans - 2 * step].filter(v => v !== ans));
+  return {
+    text: `Cuenta <b>${up ? 'hacia adelante' : 'hacia atrás'}</b> de <b>${step} en ${step}</b>. ¿Qué número falta?`,
+    visual: `<div class="seq">${seq.map((n, i) => i === blank ? '<span class="blank">?</span>' : `<span>${n}</span>`).join('')}</div>`,
+    mode: 'choice', answer: ans, opts: choice(options(ans, 0, Pm.max + 2 * step, extra)),
+    why: `Falta el ${ans}: ${seq[blank - 1]} ${up ? '+' : '−'} ${step} = ${ans}.`,
+  };
+}
+
+// ---------- Nivel 5: sumas y restas ----------
+function evalSeq(nums, ops) { let r = nums[0]; for (let i = 0; i < ops.length; i++) { r = ops[i] === '+' ? r + nums[i + 1] : r - nums[i + 1]; if (r < 0) return null; } return r; }
+function genSumas() {
+  const Pm = [{ k: 2, max: 20, tiles: 4 }, { k: 2, max: 50, tiles: 5 }, { k: pick([2, 3]), max: 100, tiles: 5 }, { k: 3, max: 100, tiles: 6 }, { k: 3, max: 500, tiles: 6 }][diff];
+  let nums, ops, t, guard = 0;
+  do { nums = Array.from({ length: Pm.k }, () => rnd(1, Pm.max)); ops = Array.from({ length: Pm.k - 1 }, () => pick(['+', '−'])); t = evalSeq(nums, ops); } while ((t === null || t === 0) && guard++ < 200);
+  if (t === null || t === 0) { nums = [Pm.max, 1]; ops = ['−']; t = Pm.max - 1; } // ponytail: fallback improbable
+  const tiles = [...nums]; while (tiles.length < Pm.tiles) tiles.push(rnd(1, Pm.max));
+  const hint = Pm.k === 2 && ops[0] === '−' ? ' (Primero el mayor)' : Pm.k === 3 ? ' (En orden, de izquierda a derecha)' : '';
+  return {
+    text: `Toca <u>${Pm.k === 2 ? 'dos' : 'tres'} números</u> que den el resultado.${hint}`,
+    visual: `<div class="eq">${nums.map((_, i) => (i ? `<span>${ops[i - 1]}</span>` : '') + `<span class="slot" id="s${i}">?</span>`).join('')}<span>=</span><span style="color:#1b8f4d">${t}</span></div>`,
+    mode: 'pair', k: Pm.k, ops, target: t, nums, opts: choice(shuffle(tiles)), why: `${nums.map((n, i) => (i ? ' ' + ops[i - 1] + ' ' : '') + n).join('')} = ${t}.`,
+  };
+}
+
+const LEVELS = [
+  { name: 'Decenas y unidades', icon: '🔢', gen: genDU },
+  { name: 'Simetría', icon: '🔷', gen: genSim },
+  { name: 'Ábaco: ordenar números', icon: '🧮', gen: genAbaco },
+  { name: 'Conteo hacia atrás', icon: '⏪', gen: genConteo },
+  { name: 'Sumas y restas', icon: '➕', gen: genSumas },
+  { name: 'Evaluación completa', icon: '🏆', gen: () => pick([genDU, genSim, genAbaco, genConteo, genSumas])() },
+];
+
+// ---------- Juego ----------
+function setDiff(i) { diff = i; save('diff', i); showStart(); }
+function showStart() {
+  $('end').classList.add('hidden'); $('game').classList.add('hidden'); $('start').classList.remove('hidden');
+  $('levelName').textContent = 'Elige tu nivel';
+  $('diffs').innerHTML = DIFFS.map((d, i) => `<button class="${i === diff ? 'on' : ''}" onclick="setDiff(${i})">${d[1]}<br>${d[0]}</button>`).join('');
+  $('levels').innerHTML = LEVELS.map((l, i) => { const b = load(`best_${i}_${diff}`, null); return `<button onclick="startGame(${i})"><span>${l.icon} Nivel ${i + 1}: ${l.name}</span><small>${b !== null ? '🏆 ' + b : ''}</small></button>`; }).join('');
+}
+
+function startGame(i) {
+  level = i; andy = 0; rival = 0; turn = 1;
+  $('sAndy').textContent = 0; $('sRival').textContent = 0;
+  $('levelName').textContent = `${LEVELS[i].icon} Nivel ${i + 1}: ${LEVELS[i].name} · ${DIFFS[diff][1]} ${DIFFS[diff][0]}`;
+  $('start').classList.add('hidden'); $('end').classList.add('hidden'); $('game').classList.remove('hidden');
+  render();
+}
+
+function render() {
+  current = LEVELS[level].gen();
+  $('turn').textContent = turn;
+  $('bar').style.width = ((turn - 1) / TOTAL * 100) + '%';
+  $('q').innerHTML = current.text;
+  $('visual').innerHTML = current.visual || '';
+  const o = $('opts'); o.innerHTML = ''; o.className = 'options' + (current.three ? ' three' : '') + (current.textOpts ? ' text' : '');
+  current.opts.forEach(op => { const b = document.createElement('button'); b.innerHTML = op.html; b.onclick = () => tap(b, op); o.appendChild(b); });
+  $('fb').textContent = ''; $('fb').className = 'feedback';
+  $('next').classList.add('hidden');
+  $('ball').className = 'ball';
+  current.idx = 0; current.sel = [];
+}
+
+const buttons = () => [...$('opts').children];
+function tap(btn, op) {
+  const c = current, val = op.v;
+  if (c.mode === 'choice') {
+    buttons().forEach((b, i) => { b.disabled = true; if (c.opts[i].v === c.answer) b.classList.add('ok'); });
+    const ok = val === c.answer;
+    if (!ok) btn.classList.add('bad');
+    return finish(ok);
+  }
+  if (c.mode === 'order') {
+    if (val === c.answer[c.idx]) {
+      btn.classList.add('ok'); btn.disabled = true; c.idx++;
+      if (c.idx === c.answer.length) finish(true);
+      return;
+    }
+    btn.classList.add('bad');
+    buttons().forEach((b, i) => { b.disabled = true; b.innerHTML = `${c.answer.indexOf(c.opts[i].v) + 1}º ` + b.innerHTML; });
+    return finish(false);
+  }
+  if (c.mode === 'pair') {
+    btn.classList.add('sel'); btn.disabled = true; c.sel.push(val);
+    const s = $('s' + (c.sel.length - 1)); s.textContent = val; s.classList.add('filled');
+    if (c.sel.length < c.k) return;
+    const ok = evalSeq(c.sel, c.ops) === c.target;
+    buttons().forEach(b => { b.disabled = true; });
+    if (!ok) c.nums.forEach((n, i) => { const sl = $('s' + i); sl.textContent = n; sl.style.color = '#1b8f4d'; });
+    return finish(ok);
+  }
+}
+
+function finish(ok) {
+  const ball = $('ball'); void ball.offsetWidth;
+  if (ok) { andy++; ball.classList.add('shoot'); beep(true); $('fb').className = 'feedback good'; $('fb').textContent = pick(['⚽ ¡GOOOL! ¡Bien, Andy!', '🎉 ¡Golazo!', '🔥 ¡Qué tiro! ¡Gol!', '🏆 ¡Crack! ¡Gol!']) + ' ' + current.why; }
+  else { rival++; ball.classList.add('miss'); beep(false); $('fb').className = 'feedback bad'; $('fb').textContent = '😅 Afuera. ' + current.why; }
+  if (current.after) $('visual').innerHTML = current.after;
+  $('sAndy').textContent = andy; $('sRival').textContent = rival;
+  $('next').classList.remove('hidden');
+}
+
+function nextQ() { turn++; if (turn > TOTAL) return endGame(); render(); }
+
+function endGame() {
+  $('game').classList.add('hidden'); $('end').classList.remove('hidden');
+  const stars = andy >= 9 ? 3 : andy >= 7 ? 2 : andy >= 5 ? 1 : 0;
+  $('stars').textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+  $('endTitle').textContent = andy > rival ? '🏆 ¡Ganaste, Andy!' : andy === rival ? '🤝 ¡Empate!' : '💪 ¡Casi! Sigue practicando';
+  $('endText').innerHTML = `Resultado: <b>Andy ${andy} – ${rival} Rival</b><br><small>${DIFFS[diff][1]} ${DIFFS[diff][0]}</small>`;
+  const key = `best_${level}_${diff}`;
+  if (andy > +load(key, 0)) { save(key, andy); $('endText').innerHTML += '<br>🎉 ¡Nuevo récord!'; }
+}
+
+// Sonido simple sin archivos
+let ctx;
+function beep(good) {
+  try {
+    ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+    const notes = good ? [523, 659, 784, 1047] : [300, 220];
+    notes.forEach((f, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.frequency.value = f; o.type = good ? 'square' : 'sawtooth';
+      g.gain.value = .08; o.connect(g); g.connect(ctx.destination);
+      o.start(ctx.currentTime + i * .12); o.stop(ctx.currentTime + i * .12 + .15);
+    });
+  } catch {}
+}
+
+// Autocheck (ver consola): cada generador produce preguntas válidas en todas las dificultades
+function selfCheck() {
+  let bad = 0; const d0 = diff;
+  for (diff = 0; diff < 5; diff++) for (const L of LEVELS) for (let i = 0; i < 200; i++) {
+    const q = L.gen(), vs = q.opts.map(o => o.v);
+    const ok = q.mode === 'choice' ? vs.length >= 2 && new Set(vs).size === vs.length && vs.includes(q.answer)
+      : q.mode === 'order' ? vs.length >= 3 && q.answer.length === vs.length && q.answer.every(v => vs.includes(v))
+      : q.nums.every(n => vs.filter(v => v === n).length >= q.nums.filter(v => v === n).length) && evalSeq(q.nums, q.ops) === q.target && q.target > 0;
+    if (!ok) { bad++; console.error('pregunta mala', L.name, diff, q); }
+  }
+  diff = d0; return bad;
+}
+console.assert(selfCheck() === 0, 'selfCheck falló');
+
+showStart();
+</script>
+</body>
+</html>
